@@ -1,6 +1,7 @@
 import { DictionaryMap } from './../../dictionary/dictionary-map';
-export function writePropertyName(node: any, state: any): void {
-  DictionaryMap[node.key.type](node.key, state);
+import { Context } from '../../common';
+export function writePropertyName(node: any, state: any, context: Context): void {
+  DictionaryMap[node.key.type](node.key, state, context);
   state.source += `: `;
-  DictionaryMap[node.value.type](node.value, state);
+  DictionaryMap[node.value.type](node.value, state, context);
 }

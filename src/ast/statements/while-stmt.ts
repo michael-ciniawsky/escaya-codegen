@@ -1,8 +1,9 @@
 import { DictionaryMap } from './../../dictionary/dictionary-map';
-export function writeWhileStatement(node: any, state: any): void {
+import { Context } from '../../common';
+export function writeWhileStatement(node: any, state: any, context: Context): void {
   state.source += 'while (';
-  DictionaryMap[node.expression.type](node.expression, state);
+  DictionaryMap[node.expression.type](node.expression, state, context);
   state.source += ')';
-  DictionaryMap[node.statement.type](node.statement, state);
+  DictionaryMap[node.statement.type](node.statement, state, context);
   if (node.asi) state.source += ';';
 }

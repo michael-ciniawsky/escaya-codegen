@@ -1,4 +1,5 @@
 import { DictionaryMap } from '../../dictionary/dictionary-map';
-export function writeConciseBody(node: any, state: any): void {
-  DictionaryMap[node.expression.type](node.expression, state);
+import { Context } from '../../common';
+export function writeConciseBody(node: any, state: any, context: Context): void {
+  DictionaryMap[node.expression.type](node.expression, state, context);
 }

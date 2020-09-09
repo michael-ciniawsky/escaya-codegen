@@ -1,5 +1,6 @@
 import { DictionaryMap } from './../../dictionary/dictionary-map';
-export function writeFunctionDeclaration(node: any, state: any): void {
+import { Context } from '../../common';
+export function writeFunctionDeclaration(node: any, state: any, context: Context): void {
   state.source +=
     (node.async ? 'async ' : '') + (node.generator ? 'function* ' : 'function ') + (node.name ? node.name.name : '');
 
@@ -10,7 +11,7 @@ export function writeFunctionDeclaration(node: any, state: any): void {
     for (let i = 0; ; ) {
       const element = params[i];
       if (element != null) {
-        DictionaryMap[element.type](element, state);
+        DictionaryMap[element.type](element, state, context);
       }
       if (++i < length) {
         state.source += ', ';
@@ -24,5 +25,5 @@ export function writeFunctionDeclaration(node: any, state: any): void {
   }
 
   state.source += ') ';
-  DictionaryMap[node.contents.type](node.contents, state);
+  DictionaryMap[node.contents.type](node.contents, state, context);
 }

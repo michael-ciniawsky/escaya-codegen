@@ -1,3 +1,4 @@
-export function writeCoverInitializedName(_node: any, state: any): void {
+import { Context } from '../../common';
+export function writeCoverInitializedName(_node: any, state: any, _context: Context): void {
   state.source += `this`;
 }

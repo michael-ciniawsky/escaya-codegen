@@ -1,9 +1,9 @@
 import { DictionaryMap } from '../../dictionary/dictionary-map';
-
-export function writeBindingElement(node: any, state: any): void {
-  DictionaryMap[node.left.type](node.left, state);
+import { Context } from '../../common';
+export function writeBindingElement(node: any, state: any, context: Context): void {
+  DictionaryMap[node.left.type](node.left, state, context);
   if (node.right !== null) {
     state.source += ' = ';
-    DictionaryMap[node.right.type](node.right, state);
+    DictionaryMap[node.right.type](node.right, state, context);
   }
 }

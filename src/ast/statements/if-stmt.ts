@@ -1,5 +1,6 @@
 import { DictionaryMap } from '../../dictionary/dictionary-map';
-export function writeIfStatement(node: any, state: any): void {
+import { Context } from '../../common';
+export function writeIfStatement(node: any, state: any, context: Context): void {
   // TODO: This need
   //
   // - 'if(a){for(a in a)if(a);}else;'
@@ -17,12 +18,12 @@ export function writeIfStatement(node: any, state: any): void {
   // - if (true) that(); else;
 
   state.source += 'if (';
-  DictionaryMap[node.expression.type](node.expression, state);
+  DictionaryMap[node.expression.type](node.expression, state, context);
   state.source += ') ';
-  DictionaryMap[node.consequent.type](node.consequent, state);
+  DictionaryMap[node.consequent.type](node.consequent, state, context);
   // state.source += ';';
   if (node.alternate != null) {
     state.source += ' else ';
-    DictionaryMap[node.alternate.type](node.alternate, state);
+    DictionaryMap[node.alternate.type](node.alternate, state, context);
   }
 }

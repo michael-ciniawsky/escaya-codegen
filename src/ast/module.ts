@@ -1,4 +1,5 @@
 import { DictionaryMap } from '../../src/dictionary/dictionary-map';
-export function writeModule(node: any, state: any): void {
-  node.leafs.forEach((stmt: any) => DictionaryMap[stmt.type](stmt, state));
+import { Context } from '../common';
+export function writeModule(node: any, state: any, context: Context): void {
+  node.leafs.forEach((stmt: any) => DictionaryMap[stmt.type](stmt, state, context));
 }

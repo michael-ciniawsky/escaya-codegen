@@ -1,6 +1,6 @@
 import { DictionaryMap } from './../../dictionary/dictionary-map';
-
-export function writeArrayLiteral(node: any, state: any): void {
+import { Context } from '../../common';
+export function writeArrayLiteral(node: any, state: any, context: Context): void {
   state.source += `[`;
   if (node.elements.length > 0) {
     const { elements } = node,
@@ -8,7 +8,7 @@ export function writeArrayLiteral(node: any, state: any): void {
     for (let i = 0; ; ) {
       const element = elements[i];
       if (element != null) {
-        DictionaryMap[element.type](element, state);
+        DictionaryMap[element.type](element, state, context);
       }
       if (++i < length) {
         state.source += ', ';

@@ -1,5 +1,6 @@
 import { DictionaryMap } from './../../dictionary/dictionary-map';
-export function writePostixUpdateExpression(node: any, state: any): void {
+import { Context } from '../../common';
+export function writePostixUpdateExpression(node: any, state: any, context: Context): void {
   state.source += node.operator + ' ';
-  DictionaryMap[node.operand.type](node.operand, state);
+  DictionaryMap[node.operand.type](node.operand, state, context);
 }
