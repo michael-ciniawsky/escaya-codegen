@@ -2,7 +2,7 @@ import { DictionaryMap } from '../../dictionary/dictionary-map';
 import { Context } from '../../common';
 export function writeForStatement(node: any, state: any, context: Context): void {
   state.source += ` for (`;
-
+  context |= Context.ForStatement;
   if (node.variableDeclarationList) {
     state.source += 'var ';
     const { initializer } = node;

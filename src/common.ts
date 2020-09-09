@@ -39,6 +39,9 @@ export function writeLeafNodes(node: any, state: any, context: Context): any {
 
   const statements = node.leafs;
 
+  // Set the 'BlockStatement' bit to cover edge cases
+  context = context |= Context.BlockStatement;
+
   state.source += '{';
 
   for (let i = 0; i < statements.length; i++) {
