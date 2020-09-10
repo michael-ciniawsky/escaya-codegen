@@ -724,6 +724,18 @@ export function writeStatements(node: any, state: any, context: Context): string
   return result;
 }
 
+// ModuleItemList :
+//   ModuleItem
+//   ModuleItemListModuleItem
+export function writeModuleItem(node: any, state: any, context: Context): string {
+  let result = '';
+  switch (node.type) {
+    default:
+      result += writeStatements(node, state, context);
+  }
+  return result;
+}
+
 function maybeBlock(stmt: any, state: any, context: any, suffix: any): any {
   var previousBase, result;
 
@@ -746,20 +758,6 @@ function maybeBlock(stmt: any, state: any, context: any, suffix: any): any {
 
   if (suffix) {
     return result + '\n' + addIndent(state, '');
-  }
-  return result;
-}
-
-export function writeScript(node: any, state: any, context: Context): string {
-  let result = '';
-  result = '';
-  let i = 0,
-    len;
-  if (node.leafs.length > 0) {
-    for (i = 0, len = node.leafs.length; i < len; i += 1) {
-      result += writeStatements(node.leafs[i], state, context);
-      if (i + 1 < len) result += '\n';
-    }
   }
   return result;
 }

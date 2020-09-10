@@ -1,6 +1,6 @@
 import * as t from 'assert';
 import { parseScript } from 'escaya';
-import { generate } from '../src/escaya-codegen';
+import { generateScript } from '../src/escaya-codegen';
 
 describe('Expressions', () => {
   for (const arg of [
@@ -454,7 +454,7 @@ describe('Expressions', () => {
   ]) {
     it(`${arg}`, () => {
       t.doesNotThrow(() => {
-        parseScript(generate(parseScript(`${arg}`)));
+        parseScript(generateScript(parseScript(`${arg}`)));
       });
     });
   }
