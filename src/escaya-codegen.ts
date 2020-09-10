@@ -1,8 +1,16 @@
-import { createState } from './codeGen';
-import { DictionaryMap } from './dictionary/dictionary-map';
+import { createState, writeScript } from './codeGen';
 import { Context } from './common';
-export function generate(node: any): any {
+
+/**
+ * The code generator options.
+ */
+export interface Options {
+  indent?: any;
+  index?: any;
+  format?: any;
+}
+
+export function generate(node: any, _options?: Options): string {
   const state = createState();
-  DictionaryMap[node.type](node, state, Context.None);
-  return state.source;
+  return writeScript(node, state, Context.None);
 }

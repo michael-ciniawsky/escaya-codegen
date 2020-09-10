@@ -65,7 +65,7 @@
     "chalk": "^3.0.0",
     "coveralls": "^3.1.0",
     "cross-env": "^7.0.2",
-    "escaya": "0.0.40",
+    "escaya": "0.0.42",
     "eslint": "^7.8.1",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-node": "^11.1.0",

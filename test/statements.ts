@@ -2,7 +2,7 @@ import * as t from 'assert';
 import { parseScript } from 'escaya';
 import { generate } from '../src/escaya-codegen';
 
-describe('Statements', () => {
+describe('Expressions', () => {
   for (const arg of [
     // Blockstatement
     '{}',
@@ -13,9 +13,9 @@ describe('Statements', () => {
     '{a\nb\n}',
     '{ function f() {} ; function f() {} }',
     '{ function f(){} function f(){} }',
-    // `{ let f = 123; if (false) ; else function f() {  } }`,
+    `{ let f = 123; if (false) ; else function f() {  } }`,
     `{ let x; } var x`,
-    // `{ var f; var f; }`,
+    `{ var f; var f; }`,
     `{ function a(){} function a(){} }`,
     `{ function* f() {} async function f() {} }`,
     `{ function let(){} }`,
@@ -24,10 +24,12 @@ describe('Statements', () => {
 
     'while(1)break',
     'while(1)break',
-    // 'a:while(1){break;break a}', 'a:while(1){break;break a;}',
+    'a:while(1){break;break a}',
+    'a:while(1){break;break a;}',
     'switch(1){case 1:break}',
     'switch(1){case 1:break;}',
-    // 'while(1){break;break}', 'while(1){break;break;}',
+    'while(1){break;break}',
+    'while(1){break;break;}',
 
     // ContinueStatement
 
@@ -42,15 +44,16 @@ describe('Statements', () => {
 
     // DoWhileStatement
 
-    // 'do;while(1)',
-    // 'do debugger;while(1)'
-    // 'do if(3){}while(1)',
-    // 'do 3;while(1)', 'do(3);while(1)'
-    // 'do x(); while (true);',
-    // `do { var [[foo]=[42]] = [] } while (j)`,
-    // '{ do { } while (false) false }',
-    // 'do x();while (true)',
-    // 'do {} while(x) x',
+    'do;while(1)',
+    'do debugger;while(1)',
+    'do if(3){}while(1)',
+    'do 3;while(1)',
+    'do(3);while(1)',
+    'do x(); while (true);',
+    `do { var [[foo]=[42]] = [] } while (j)`,
+    '{ do { } while (false) false }',
+    'do x();while (true)',
+    'do {} while(x) x',
 
     // ExpressionStatement
     'a',
@@ -77,7 +80,7 @@ describe('Statements', () => {
     'async function * f() { "use strict"; for await\n({0: a} of []); }',
     'async function f() { for\nawait ({0: a} of [])  { } }',
     'async function * f() { for await({0: a} of []); }',
-    // 'async function * f() { for await({a = 1} of []); }',
+    'async function * f() { for await({a = 1} of []); }',
     //'async function f() { "use strict"; let y; for\nawait({a = 1} of []); }',
     //'async function f() { let y; for await ({a = 1} of []); }',
     'async function * f() { "use strict"; for await\n({a: a = 1} of []); }',
@@ -115,7 +118,7 @@ describe('Statements', () => {
     'for((let.a)of b);',
     'for((let[a])of b);',
     'for((let().a)of b);',
-    'for((let``.a)of b);',
+    //'for((let``.a)of b);',
     'for((let.a)of b);',
     'for((let).a of b);',
     'for(a of(b,c));',
@@ -160,7 +163,7 @@ describe('Statements', () => {
     'for ((x) in { attr: null }) {}',
     'for (/foo/g[x] in c) d;',
     'for ("foo".x in y);',
-    //'for (456..x in c) d;',
+    'for (456..x in c) d;',
     'for ([x] in obj);',
     'for ((let)[x] in x);',
     'for ([x] = y;;);',
@@ -224,7 +227,7 @@ describe('Statements', () => {
     'for((let.a)in b);',
     'for((let[a])in b);',
     'for((let().a)in b);',
-    'for((let``.a)in b);',
+    //'for((let``.a)in b);',
     'for((let.a)in b);',
     'for((let).a in b);',
     'for(var a=0 in 1);',
@@ -237,7 +240,7 @@ describe('Statements', () => {
     'for(let;;);',
     'for(let.a;;);',
     'for((let[a]);;);',
-    // 'for((let[a]++);;);',
+    'for((let[a]++);;);',
     '!function*(){for((yield a in 0);;);}',
     '!function*(){for((yield*a in 0);;);}',
     'for((1 in[]);;);',
@@ -309,13 +312,13 @@ describe('Statements', () => {
     'for(1*(1+1 in[]);;);',
     'for(1*(1+(1 in[]));;);',
     `for (let i = 0, {length} = list; i < length; i++) {}
-    for (; ; ) {}
-    for (function () {
-      const i = 0;
-    }; ; ) {}
-    for (() => {
-      const i = 0;
-    }; ; ) {}`,
+        for (; ; ) {}
+        for (function () {
+          const i = 0;
+        }; ; ) {}
+        for (() => {
+          const i = 0;
+        }; ; ) {}`,
 
     // IfStatement
     'if(a);',
@@ -375,18 +378,18 @@ describe('Statements', () => {
     'switch(null) { default: case foo: let x = y; }',
     `switch (X) {}`,
     /*  `{
-      let result;
-      let x = 1;
-      switch (x) {
-        case 1:
-          let x = 2;
-          result = x;
-          break;
-        default:
-          result = 0;
-          break;
-      }
-    }`,*/
+          let result;
+          let x = 1;
+          switch (x) {
+            case 1:
+              let x = 2;
+              result = x;
+              break;
+            default:
+              result = 0;
+              break;
+          }
+        }`,*/
 
     // ThrowStatement
 
@@ -433,7 +436,7 @@ describe('Statements', () => {
     'while(0)while(0);',
     'while (/["-{-]/gmuy[true] >>>= (((2e308)))) {}',
     'while(x=y) { function a() {} }',
-    //'while (x < 10) { x++; y--; }',
+    'while (x < 10) { x++; y--; }',
     'while(x=y) { async function *a() {} }',
     'while(x=y) { async function *a() {} }',
     'while(x=y) { async function *a() { yield foo; await x;} }',
@@ -445,12 +448,11 @@ describe('Statements', () => {
 
     'with(null);',
     'with({}) {}',
-    // 'with([x=y]) {}',
-    // 'with([x=y/(x)]) {}',
+    'with([x=y]) {}',
+    'with([x=y/(x)]) {}',
     'with({...b/c}) {}'
   ]) {
     it(`${arg}`, () => {
-      //    console.log(generate(parseScript(`${arg}`)));
       t.doesNotThrow(() => {
         parseScript(generate(parseScript(`${arg}`)));
       });

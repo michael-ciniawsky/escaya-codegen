@@ -1,55 +1,56 @@
-import { DictionaryMap } from './dictionary/dictionary-map';
-
 export const enum Context {
-  None = 0,
-
-  InBlock1 = 1 << 0,
-  IsArrow = 1 << 1, // For cases like '()=>{}\n(foo)', 'async () => {} \n  /x/', etc
-
-  // Statements for ';' tracking
-  BlockStatement = 1 << 2,
-  BreakStatement = 1 << 3,
-  SwitchStatement = 1 << 4,
-  IfStatement = 1 << 5,
-  LexicalDeclaration = 1 << 6,
-  VariableStatement = 1 << 7,
-  IterationStatement = 1 << 8,
-  ReturnStatement = 1 << 9,
-  ThrowStatement = 1 << 10,
-  TryStatement = 1 << 11,
-  ForStatement = 1 << 12,
-  DebuggerStatement = 1 << 13,
-  ExpressionStatement = 1 << 14
+  None = 0
 }
 
 export interface CodeGenState {
-  source: string;
-  index: number;
+  base: any;
+  indent: number;
+  currentIndent: number;
   indentSize: number;
-  indent: string;
-  lineEnd: string;
 }
 
-export const EXPRESSIONS_PRECEDENCE: any = {
-  NumericLiteral: 18
-};
+export const enum Precedence {
+  Sequence,
+  Assignment = 1 << 1,
+  Conditional = 1 << 2,
+  LogicalOR = 1 << 3,
+  LogicalAND = 1 << 4,
+  LogicalXOR = 1 << 5,
+  BitwiseOR = 1 << 6,
+  BitwiseAND = 1 << 7,
+  Equality = 1 << 8,
+  Relational = 1 << 9,
+  BitwiseSHIFT = 1 << 10,
+  Additive = 1 << 11,
+  Multiplicative = 1 << 12,
+  Unary = 1 << 13,
+  Postfix = 1 << 14,
+  Call = 1 << 15,
+  New = 1 << 16,
+  Member = 1 << 17,
+  Primary = 1 << 18
+}
 
-export function writeLeafNodes(node: any, state: any, context: Context): any {
-  let str = '';
-
-  const statements = node.leafs;
-
-  // Set the 'BlockStatement' bit to cover edge cases
-  context = context |= Context.BlockStatement;
-
-  state.source += '{';
-
-  for (let i = 0; i < statements.length; i++) {
-    DictionaryMap[statements[i].type](statements[i], state, context);
-    str += state.source;
+export function indent(state: CodeGenState, buffer: string, str: string): any {
+  if (str !== undefined) {
+    buffer = println(state, buffer, str);
   }
+  state.currentIndent++;
+  return buffer;
+}
 
-  state.source += '}';
-  if (node.asi) state.source += ';';
-  return str;
+export function println(state: CodeGenState, buffer: string, str: any): any {
+  buffer += ' '.repeat(state.currentIndent * state.indentSize);
+  buffer += str + '\n';
+  return buffer;
+}
+
+export function dedent(state: CodeGenState, buffer: string, str: string): any {
+  if (state.currentIndent > 0) {
+    state.currentIndent--;
+  }
+  if (str !== undefined) {
+    buffer = println(state, buffer, str);
+  }
+  return buffer;
 }
