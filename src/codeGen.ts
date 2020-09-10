@@ -260,7 +260,33 @@ export function writeExpressions(node: any, state: CodeGenState, context: Contex
       break;
 
     case 'ImportCall':
-      result = ''; // TODO
+      result = 'import(' + writeExpressions(node.import, state, context, prec) + ')';
+      break;
+
+    case 'TaggedTemplate':
+      result =
+        writeExpressions(node.member, state, context, prec) +
+        '`' +
+        writeExpressions(node.literal, state, context, prec) +
+        '`';
+      break;
+
+    case 'TemplateLiteral':
+      result = '`' + node.value + '`';
+      break;
+
+    case 'TemplateElement':
+      result += node.value;
+      if (node.expression !== null) {
+        result += '${' + writeExpressions(node.expression, state, context, prec) + '}`';
+      }
+      break;
+
+    case 'TemplateExpression':
+      result = '`';
+      for (let i = 0; i < node.elements.length; i++) {
+        result += writeExpressions(node.elements[i], state, context, prec);
+      }
       break;
 
     case 'MethodDefinition':
