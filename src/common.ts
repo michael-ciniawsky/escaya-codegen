@@ -5,8 +5,9 @@ export const enum Context {
 export interface CodeGenState {
   base: any;
   indent: any;
-  currentIndent: number;
+  indentLevel: number;
   indentSize: number;
+  lineEnd: string;
 }
 
 export const enum Precedence {

@@ -3,15 +3,11 @@ import { CodeGenState, Context, Precedence, stringRepeat } from './common';
 export function createState(): CodeGenState {
   return {
     base: stringRepeat('    ', 0),
-    currentIndent: 0,
+    indentLevel: 0,
     indent: '    ',
-    indentSize: 2
+    indentSize: 2,
+    lineEnd: '\n'
   };
-}
-
-// TODO: Fix this
-function addIndent(_state: any, str: any): any {
-  return str;
 }
 
 // Expression :
@@ -19,7 +15,6 @@ function addIndent(_state: any, str: any): any {
 //   Expression `,` AssignmentExpression
 export function writeExpressions(node: any, state: CodeGenState, context: Context, prec: Precedence): string {
   let result = '';
-  let previousBase;
 
   switch (node.type) {
     case 'CommaOperator':
@@ -180,48 +175,51 @@ export function writeExpressions(node: any, state: CodeGenState, context: Contex
 
     case 'ArrayLiteral':
     case 'ArrayAssignmentPattern':
-    case 'ArrayBindingPattern':
+    case 'ArrayBindingPattern': {
+      const indent = state.indent.repeat(state.indentLevel++);
       result = '[';
-      if (node.elements.length > 0) {
-        result += '\n';
-        previousBase = state.base;
-        state.base = state.base;
-        let i, len;
-        for (i = 0, len = node.elements.length; i < len; i += 1) {
-          result += addIndent(state, ' ');
-          result += writeExpressions(node.elements[i], state, context, Precedence.Assignment);
 
-          if (i + 1 < len) result += ',\n';
+      const elements = node.elements;
+
+      if (elements.length > 0) {
+        result += state.lineEnd + indent + state.indent + writeExpressions(elements[0], state, context, prec);
+        for (let i = 1; i < elements.length; i++) {
+          result += ',' + state.lineEnd + indent + state.indent + writeExpressions(elements[i], state, context, prec);
         }
-        state.base = previousBase;
-        result += '\n';
+        result += state.lineEnd + indent + ']';
+      } else {
+        result += indent + ']';
       }
-      result += ']';
+
+      state.indentLevel--;
+
       break;
+    }
+
     case 'Elison':
       result += ',';
       break;
+
     case 'ParenthesizedExpression':
       result += '(' + writeExpressions(node.expression, state, context, Precedence.Assignment) + ')';
       break;
 
+    case 'ObjectBindingPattern':
+    case 'ObjectAssignmentPattern':
     case 'ObjectLiteral':
+      const indent = state.indent.repeat(state.indentLevel++);
+
       result += '{';
-      previousBase = state.base;
-      state.base += state.indent;
-      if (node.properties.length > 0) {
-        result += '\n';
-        let i, len;
-        for (i = 0, len = node.properties.length; i < len; i += 1) {
-          result += addIndent(state, writeExpressions(node.properties[i], state, context, prec));
-          if (i + 1 < len) result += ',\n';
+      const properties = node.properties;
+      if (properties.length > 0) {
+        result += state.lineEnd + indent + state.indent + writeExpressions(properties[0], state, context, prec);
+        for (let i = 1; i < properties.length; i++) {
+          result += ',' + state.lineEnd + indent + state.indent + writeExpressions(properties[i], state, context, prec);
         }
-
-        state.base = previousBase;
-        result += '\n';
+        result += state.lineEnd + indent + '}';
+      } else {
+        result += indent + '}';
       }
-
-      result += addIndent(state, '}');
 
       break;
 
@@ -234,22 +232,21 @@ export function writeExpressions(node: any, state: CodeGenState, context: Contex
 
     case 'ClassElement':
       if (node.static) result += 'static ';
-      result += addIndent(state, writeExpressions(node.method, state, context, prec));
+      result += writeExpressions(node.method, state, context, prec);
       break;
 
     case 'ClassExpression':
       result += 'class ' + (node.name ? `${node.name.name} ` : '');
       if (node.heritage) {
         result += 'extends ';
-        result += addIndent(state, writeExpressions(node.heritage, state, context, prec));
+        result += writeExpressions(node.heritage, state, context, prec);
       }
       result += '{';
       const elements = node.elements;
-      if (elements != null && elements.length > 0) {
-        const { length } = elements;
-        for (let i = 0; i < length; i++) {
+      if (elements.length > 0) {
+        for (let i = 0; i < elements.length; i++) {
           const element = elements[i];
-          result += addIndent(state, writeExpressions(element, state, context, prec));
+          result += writeExpressions(element, state, context, prec);
         }
       }
       result += '}';
@@ -294,47 +291,26 @@ export function writeExpressions(node: any, state: CodeGenState, context: Contex
       if (node.getter) {
         result += 'get () ';
       } else if (node.setter) {
-        result += 'set ' + writeExpressions(node.name, state, context, prec) + '(';
-        result += writeExpressions(node.propertySetParameterList, state, context, prec);
-        result += ')';
+        result +=
+          'set ' +
+          writeExpressions(node.name, state, context, prec) +
+          '(' +
+          writeExpressions(node.propertySetParameterList, state, context, prec) +
+          ')';
       } else {
         if (node.generator) result += '*';
-
-        result += writeExpressions(node.name, state, context, prec);
-        result += '(';
-        result += ')';
+        result += writeExpressions(node.name, state, context, prec) + '()';
       }
       result += writeExpressions(node.contents, state, context, prec);
-      break;
-
-    case 'ObjectBindingPattern':
-    case 'ObjectAssignmentPattern':
-      result += `{`;
-      if (node.properties.length > 0) {
-        const { properties } = node,
-          { length } = properties;
-        for (let i = 0; ; ) {
-          const property = properties[i];
-          result += writeExpressions(property, state, context, prec);
-          if (++i < length) {
-            result += ', ';
-          } else {
-            break;
-          }
-        }
-      }
-      result += `}`;
       break;
 
     case 'SuperCall':
       result += `super(`;
       if (node.arguments != null && node.arguments.length > 0) {
         result += writeExpressions(node.arguments[0], state, context, Precedence.Assignment);
-        const { length } = node.arguments;
-        for (let i = 1; i < length; i++) {
-          const param = node.arguments[i];
-          result += ', ';
-          result += writeExpressions(param, state, context, Precedence.Assignment);
+        const args = node.arguments;
+        for (let i = 1; i < args.length; i++) {
+          result += ', ' + writeExpressions(args[i], state, context, Precedence.Assignment);
         }
       }
       result += ')';
@@ -362,9 +338,7 @@ export function writeExpressions(node: any, state: CodeGenState, context: Contex
       for (let i = 0; i < statements.length; i++) {
         result += writeStatements(statements[i], state, context);
       }
-
       result += '}';
-
       break;
 
     case 'RegularExpressionLiteral':
@@ -419,7 +393,6 @@ export function writeExpressions(node: any, state: CodeGenState, context: Contex
 //   DebuggerStatement
 export function writeStatements(node: any, state: any, context: Context): string {
   let result = '';
-  let previousBase;
   switch (node.type) {
     case 'FunctionDeclaration':
       result +=
@@ -428,22 +401,12 @@ export function writeStatements(node: any, state: any, context: Context): string
         (node.name ? node.name.name : '');
       result += '(';
 
-      if (node.params.length > 0) {
-        const { params } = node,
-          { length } = params;
-        for (let i = 0; ; ) {
-          const element = params[i];
-          if (element != null) {
-            result += writeExpressions(element, state, context, Precedence.Postfix);
-          }
-          if (++i < length) {
-            result += ', ';
-          } else {
-            if (element == null) {
-              result += ', ';
-            }
-            break;
-          }
+      const params = node.params;
+
+      if (params.length > 0) {
+        result += writeExpressions(params[0], state, context, Precedence.Postfix);
+        for (let i = 1; i < params.length; i++) {
+          result += ',' + writeExpressions(params[i], state, context, Precedence.Postfix);
         }
       }
       result += ') ';
@@ -451,11 +414,12 @@ export function writeStatements(node: any, state: any, context: Context): string
       result += writeExpressions(node.contents, state, context, Precedence.Postfix);
 
       break;
+
     case 'ClassDeclaration':
       result += 'class ' + (node.name ? `${node.name.name} ` : '');
       if (node.heritage) {
         result += 'extends ';
-        result += addIndent(state, writeExpressions(node.heritage, state, context, Precedence.Assignment));
+        result += writeExpressions(node.heritage, state, context, Precedence.Assignment);
       }
       result += '{';
       const elements = node.elements;
@@ -463,7 +427,7 @@ export function writeStatements(node: any, state: any, context: Context): string
         const { length } = elements;
         for (let i = 0; i < length; i++) {
           const element = elements[i];
-          result += addIndent(state, writeExpressions(element, state, context, Precedence.Assignment));
+          result += writeExpressions(element, state, context, Precedence.Assignment);
         }
       }
       result += '}';
@@ -483,6 +447,7 @@ export function writeStatements(node: any, state: any, context: Context): string
       }
       break;
     }
+
     case 'VariableDeclaration':
       result += writeExpressions(node.binding, state, context, Precedence.Assignment);
       if (node.initializer !== null) {
@@ -490,18 +455,22 @@ export function writeStatements(node: any, state: any, context: Context): string
         result += writeExpressions(node.initializer, state, context, Precedence.Assignment);
       }
       break;
+
     case 'BlockStatement':
-      result = '{\n';
-
-      previousBase = state.base;
-      state.base += state.indent;
-      let i, len;
-      for (i = 0, len = node.leafs.length; i < len; i += 1) {
-        result += addIndent(state, writeStatements(node.leafs[i], state, context)) + '\n';
+      const indent = state.indent.repeat(state.indentLevel++);
+      const statementIndent = indent + state.indent;
+      result = '{';
+      const statements = node.leafs;
+      if (statements != null && statements.length > 0) {
+        result += state.lineEnd;
+        const { length } = statements;
+        for (let i = 0; i < length; i++) {
+          result += statementIndent + writeStatements(statements[i], state, context) + state.lineEnd;
+        }
+        result += indent;
       }
-      state.base = previousBase;
-
-      result += addIndent(state, '}');
+      result += '}';
+      state.indentLevel--;
       break;
 
     case 'BreakStatement':
@@ -512,35 +481,41 @@ export function writeStatements(node: any, state: any, context: Context): string
       result = node.label ? 'continue ' + node.label.name + ';' : 'continue;';
       break;
 
-    case 'SwitchStatement':
-      previousBase = state.base;
-      state.base += state.indent;
-      result += 'switch (' + writeStatements(node.expression, state, context) + ') {\n';
-      state.base = previousBase;
+    case 'SwitchStatement': {
+      const t = state.indent;
+      const indent = state.indent.repeat(state.indentLevel++);
+      state.indent = t;
+      state.indentLevel++;
+      result += 'switch (' + writeStatements(node.expression, state, context) + ') {' + state.lineEnd;
       const clauses = node.clauses;
       for (let i = 0; i < clauses.length; i++) {
-        result += addIndent(state, writeStatements(node.clauses[i], state, context)) + '\n';
+        result += writeStatements(node.clauses[i], state, context) + state.lineEnd;
       }
-      result += addIndent(state, '}');
-      break;
+      state.indent = t;
+      state.indentLevel -= 2;
+      result += indent + '}';
 
-    case 'CaseClause':
-      result += 'case';
-      previousBase = state.base;
-      state.base += state.indent;
-      result += ' ' + writeStatements(node.expression, state, context);
-      result += ':';
+      break;
+    }
+
+    case 'CaseClause': {
+      const caseIndent = state.indent;
+      result += caseIndent + 'case';
+
+      result += ' ' + writeStatements(node.expression, state, context) + ':' + state.lineEnd;
       const leafs = node.leafs;
       for (let i = 0; i < leafs.length; i++) {
-        result += writeStatements(node.leafs[i], state, context);
+        result += state.indent + writeStatements(node.leafs[i], state, context) + state.lineEnd;
       }
       break;
-
+    }
     case 'DefaultClause': {
-      result += 'default:';
+      const caseIndent = state.indent;
+
+      result += caseIndent + 'default:' + state.lineEnd;
       const leafs = node.leafs;
       for (let i = 0; i < leafs.length; i++) {
-        result += writeStatements(node.leafs[i], state, context);
+        result += state.indent + writeStatements(node.leafs[i], state, context) + state.lineEnd;
       }
       break;
     }
@@ -570,25 +545,17 @@ export function writeStatements(node: any, state: any, context: Context): string
 
     case 'ForInStatement':
       result += `for (`;
-      previousBase = state.base;
-      state.base += state.indent;
+
       result += writeStatements(node.initializer, state, context);
-      previousBase = state.base;
-      state.base += state.indent;
       result += ' in ' + writeExpressions(node.expression, state, context, Precedence.Assignment) + ')';
-      state.base = state.previousBase;
+
       result += maybeBlock(node.statement, state, context, false);
       break;
 
     case 'ForOfStatement':
       result += `for ${node.await ? 'await ' : ''}(`;
-      previousBase = state.base;
-      state.base += state.indent;
       result += writeStatements(node.initializer, state, context);
-      previousBase = state.base;
-      state.base += state.indent;
       result += ' of ' + writeExpressions(node.expression, state, context, Precedence.Assignment) + ')';
-      state.base = state.previousBase;
       result += maybeBlock(node.statement, state, context, false);
       break;
 
@@ -625,7 +592,7 @@ export function writeStatements(node: any, state: any, context: Context): string
       result += ') ';
       result += writeStatements(node.consequent, state, context);
       if (node.alternate) {
-        result += '\n';
+        result += state.lineEnd;
         result += ' else ';
         result += writeStatements(node.alternate, state, context);
       }
@@ -664,24 +631,16 @@ export function writeStatements(node: any, state: any, context: Context): string
       break;
 
     case 'WhileStatement':
-      previousBase = state.base;
-      state.base += state.indent;
       result = 'while (' + writeExpressions(node.expression, state, context, Precedence.Assignment) + ')';
-      state.base = previousBase;
       result += maybeBlock(node.statement, state, context, false);
       break;
 
     case 'WithStatement':
-      previousBase = state.base;
-      state.base += state.indent;
       result = 'with (' + writeExpressions(node.expression, state, context, Precedence.Assignment) + ')';
-      state.base = previousBase;
       result += maybeBlock(node.statement, state, context, false);
       break;
 
     case 'LexicalBinding':
-      previousBase = state.base;
-      state.base += state.indent;
       result += writeExpressions(node.binding, state, context, Precedence.Assignment);
       if (node.initializer !== null) {
         result += ' = ';
@@ -690,8 +649,6 @@ export function writeStatements(node: any, state: any, context: Context): string
       break;
 
     case 'VariableStatement':
-      previousBase = state.base;
-      state.base += state.indent;
       result += 'var ';
       const { declarations } = node;
       const { length } = declarations;
@@ -737,7 +694,7 @@ export function writeModuleItem(node: any, state: any, context: Context): string
 }
 
 function maybeBlock(stmt: any, state: any, context: any, suffix: any): any {
-  var previousBase, result;
+  let result;
 
   if (stmt.type === 'BlockStatement') {
     result = ' ' + writeStatements(stmt, state, context);
@@ -751,13 +708,10 @@ function maybeBlock(stmt: any, state: any, context: any, suffix: any): any {
     return ';';
   }
 
-  previousBase = state.base;
-  state.base += state.indent;
-  result = '\n' + addIndent(state, writeStatements(stmt, state, context));
-  state.base = previousBase;
+  result = state.lineEnd + writeStatements(stmt, state, context);
 
   if (suffix) {
-    return result + '\n' + addIndent(state, '');
+    return result + state.lineEnd + '';
   }
   return result;
 }

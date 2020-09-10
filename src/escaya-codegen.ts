@@ -15,9 +15,9 @@ export interface Options {
 export function generateRoot(node: Script | Module, cb: any, context: Context, _options?: Options): string {
   const state = createState();
   let result = '';
-
+  const indent = state.indent.repeat(state.indentLevel);
   for (let i = 0; i < node.leafs.length; i++) {
-    result += cb(node.leafs[i], state, context);
+    result += indent + cb(node.leafs[i], state, context) + state.lineEnd;
   }
   return result;
 }
