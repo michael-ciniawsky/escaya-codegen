@@ -142,36 +142,27 @@ export function writeExpressions(node: any, state: CodeGenState, context: Contex
       result = writeExpressions(node.operand, state, context, Precedence.Postfix) + node.operator;
       break;
 
-    case 'FunctionExpression':
+    case 'FunctionExpression': {
       result +=
         (node.async ? 'async ' : '') +
         (node.generator ? 'function* ' : 'function ') +
         (node.name !== null ? node.name.name : '');
       result += '(';
 
-      if (node.params.length > 0) {
-        const { params } = node,
-          { length } = params;
-        for (let i = 0; ; ) {
-          const element = params[i];
-          if (element != null) {
-            result += writeExpressions(element, state, context, Precedence.Postfix);
-          }
-          if (++i < length) {
-            result += ', ';
-          } else {
-            if (element == null) {
-              result += ', ';
-            }
-            break;
-          }
+      const params = node.params;
+
+      if (params.length > 0) {
+        result += writeExpressions(params[0], state, context, Precedence.Postfix);
+        for (let i = 1; i < params.length; i++) {
+          result += ',' + writeExpressions(params[i], state, context, Precedence.Postfix);
         }
       }
-      result += ')';
+      result += ') ';
 
       result += writeExpressions(node.contents, state, context, Precedence.Postfix);
 
       break;
+    }
 
     case 'ArrayLiteral':
     case 'ArrayAssignmentPattern':
