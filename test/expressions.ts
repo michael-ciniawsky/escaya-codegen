@@ -36,6 +36,8 @@ describe('Expressions', () => {
     'a.m().n();',
     'a(a,)',
     'foo(a)',
+    `new (a().b)()`,
+    '+ ++x',
     'call(await)',
     'call(await.foo)',
     'foo(x,y,);',

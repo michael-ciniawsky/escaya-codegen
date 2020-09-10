@@ -1,10 +1,10 @@
-import { CodeGenState, Context, Precedence } from './common';
+import { CodeGenState, Context, Precedence, stringRepeat } from './common';
 
 export function createState(): CodeGenState {
   return {
-    base: ' ',
+    base: stringRepeat('    ', 0),
     currentIndent: 0,
-    indent: 0,
+    indent: '    ',
     indentSize: 2
   };
 }
@@ -100,19 +100,7 @@ export function writeExpressions(node: any, state: CodeGenState, context: Contex
       break;
 
     case 'UnaryExpression':
-      result += node.operator;
-      if (result.length > 2) result += ' ';
-      result += writeExpressions(
-        node.operand,
-        state,
-        context,
-        Precedence.Unary +
-          (node.operand.type === 'UnaryExpression' &&
-          node.operator.length < 3 &&
-          node.operand.operator === node.operator
-            ? 1
-            : 0)
-      );
+      result += node.operator + ' ' + writeExpressions(node.operand, state, context, Precedence.Unary);
       break;
 
     case 'ArrowFunction':
@@ -366,7 +354,7 @@ export function writeExpressions(node: any, state: CodeGenState, context: Contex
     case 'BigIntLiteral':
     case 'StringLiteral':
     case 'BooleanLiteral':
-      result = JSON.stringify(node.value);
+      result += JSON.stringify(node.value);
       break;
 
     case 'IdentifierReference':
@@ -722,13 +710,13 @@ function maybeBlock(stmt: any, state: any, context: any, suffix: any): any {
   }
 
   if (stmt.type === 'EmptyStatement') {
-    result = ';';
-  } else {
-    previousBase = state.base;
-    state.base += state.indent;
-    result = '\n' + addIndent(state, writeStatements(stmt, state, context));
-    state.base = previousBase;
+    return ';';
   }
+
+  previousBase = state.base;
+  state.base += state.indent;
+  result = '\n' + addIndent(state, writeStatements(stmt, state, context));
+  state.base = previousBase;
 
   if (suffix) {
     return result + '\n' + addIndent(state, '');
